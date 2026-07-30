@@ -96,7 +96,7 @@ function renderList(panelId, tasks, emptyMessage) {
 
 async function refreshQueue() {
   try {
-    const all = await apiGet("/api/tasks");
+    const all = await apiGet("api/tasks");
     const queue = all.filter(t => ["waiting", "downloading", "uploading", "paused"].includes(t.status));
     const completed = all.filter(t => t.status === "completed");
     const failed = all.filter(t => ["failed", "cancelled"].includes(t.status));
@@ -110,7 +110,7 @@ async function refreshQueue() {
 
 async function refreshDisk() {
   try {
-    const disk = await apiGet("/api/disk");
+    const disk = await apiGet("api/disk");
     document.getElementById("disk-bar-fill").style.width = `${disk.used_percent}%`;
     document.getElementById("disk-text").textContent =
       `${disk.free_gb} GB free of ${disk.total_gb} GB`;
@@ -197,7 +197,7 @@ document.getElementById("submit-form").addEventListener("submit", async (evt) =>
 
   for (const job of jobs) {
     try {
-      await apiPost("/api/tasks", {
+      await apiPost("api/tasks", {
         url: job.url,
         destination: job.destination,
         filename_override: job.filename_override,
@@ -245,7 +245,7 @@ document.addEventListener("click", async (evt) => {
 document.getElementById("cancel-all-btn").addEventListener("click", async () => {
   if (!confirm("Cancel every waiting/downloading/uploading task? This can't be undone.")) return;
   try {
-    const result = await apiPost("/api/tasks/cancel-all");
+    const result = await apiPost("api/tasks/cancel-all");
     await refreshQueue();
     alert(`Cancelled ${result.cancelled} task(s).`);
   } catch (e) {
@@ -299,7 +299,7 @@ function renderRemoteQueueStatus(status) {
 
 async function refreshRemoteQueueStatus() {
   try {
-    const status = await apiGet("/api/remote-queue");
+    const status = await apiGet("api/remote-queue");
     renderRemoteQueueStatus(status);
 
     remoteQueueDefaultUrl = status.default_url;
@@ -341,7 +341,7 @@ document.getElementById("remote-queue-start-btn").addEventListener("click", asyn
   }
 
   try {
-    const status = await apiPost("/api/remote-queue/start", { url, interval_seconds });
+    const status = await apiPost("api/remote-queue/start", { url, interval_seconds });
     renderRemoteQueueStatus(status);
   } catch (e) {
     alert(`Could not start auto mode: ${e.message}`);
@@ -350,7 +350,7 @@ document.getElementById("remote-queue-start-btn").addEventListener("click", asyn
 
 document.getElementById("remote-queue-stop-btn").addEventListener("click", async () => {
   try {
-    const status = await apiPost("/api/remote-queue/stop");
+    const status = await apiPost("api/remote-queue/stop");
     renderRemoteQueueStatus(status);
   } catch (e) {
     alert(`Could not stop auto mode: ${e.message}`);
@@ -359,7 +359,7 @@ document.getElementById("remote-queue-stop-btn").addEventListener("click", async
 
 document.getElementById("remote-queue-sync-btn").addEventListener("click", async () => {
   try {
-    const result = await apiPost("/api/remote-queue/sync-now");
+    const result = await apiPost("api/remote-queue/sync-now");
     await refreshRemoteQueueStatus();
     await refreshQueue();
     if (result.error) alert(`Sync failed: ${result.error}`);
