@@ -1,0 +1,22 @@
+[Unit]
+Description=Smart Upload Engine
+After=network.target
+
+[Service]
+Type=simple
+# Change this to the actual path where you uploaded the project, and the
+# actual linux user you want the app to run as (avoid root if possible).
+WorkingDirectory=/opt/smart-upload-engine
+EnvironmentFile=/opt/smart-upload-engine/.env
+ExecStart=/opt/smart-upload-engine/venv/bin/python /opt/smart-upload-engine/run.py
+Restart=always
+RestartSec=5
+User=www-data
+Group=www-data
+
+# Hardening (safe defaults; relax if your VPS setup needs it)
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

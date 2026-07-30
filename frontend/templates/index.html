@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Smart Upload Engine</title>
+  <style>
+:root {
+  --bg: #0b0e14;
+  --surface: #131722;
+  --surface-2: #1a1f2e;
+  --border: #262c3d;
+  --text: #e6e9f0;
+  --text-dim: #8b93a7;
+  --accent: #5b8cff;
+  --accent-2: #8f6bff;
+  --green: #35d488;
+  --red: #ff5c72;
+  --yellow: #ffb84d;
+  --radius: 14px;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: radial-gradient(1200px 800px at 10% -10%, #171d2e 0%, var(--bg) 60%);
+  color: var(--text);
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.app { max-width: 900px; margin: 0 auto; padding: 24px 20px 80px; }
+
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 28px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.brand { display: flex; align-items: center; gap: 10px; }
+.brand-dot {
+  width: 12px; height: 12px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  box-shadow: 0 0 12px var(--accent);
+}
+.brand h1 { font-size: 18px; font-weight: 600; margin: 0; }
+
+.disk-widget {
+  display: flex; align-items: center; gap: 10px;
+  background: var(--surface); border: 1px solid var(--border);
+  padding: 8px 14px; border-radius: 999px; font-size: 12px; color: var(--text-dim);
+}
+.disk-bar { width: 90px; height: 6px; background: var(--surface-2); border-radius: 4px; overflow: hidden; }
+.disk-bar-fill { height: 100%; width: 0%; background: linear-gradient(90deg, var(--green), var(--yellow), var(--red)); transition: width .4s ease; }
+
+.submit-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 20px; margin-bottom: 24px;
+}
+.submit-card h2 { margin: 0 0 14px; font-size: 15px; font-weight: 600; color: var(--text-dim); text-transform: uppercase; letter-spacing: .04em; }
+
+#submit-form { display: flex; gap: 10px; flex-wrap: wrap; }
+#submit-form input[type="url"] { flex: 2 1 260px; }
+#submit-form input[type="text"] { flex: 1 1 160px; }
+#submit-form select { flex: 0 0 150px; }
+
+input, select, button {
+  background: var(--surface-2); border: 1px solid var(--border); color: var(--text);
+  padding: 11px 14px; border-radius: 10px; font-size: 14px; outline: none;
+}
+input:focus, select:focus { border-color: var(--accent); }
+
+button[type="submit"] {
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  border: none; color: white; font-weight: 600; cursor: pointer;
+  transition: transform .15s ease, filter .15s ease;
+}
+button[type="submit"]:hover { filter: brightness(1.08); transform: translateY(-1px); }
+
+.hint { margin: 12px 0 0; font-size: 12px; color: var(--text-dim); }
+
+.tabs { display: flex; gap: 6px; margin-bottom: 16px; }
+.tab {
+  cursor: pointer; background: transparent; border: 1px solid var(--border);
+  color: var(--text-dim); padding: 8px 18px; border-radius: 999px; font-size: 13px;
+}
+.tab.active { background: var(--surface-2); color: var(--text); border-color: var(--accent); }
+
+.panel { display: none; flex-direction: column; gap: 12px; }
+.panel.active { display: flex; }
+
+.card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 16px 18px;
+  display: flex; flex-direction: column; gap: 10px;
+  animation: fadeIn .3s ease;
+}
+@keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+
+.card-top { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.card-name { font-weight: 600; font-size: 14px; word-break: break-all; }
+.card-sub { font-size: 12px; color: var(--text-dim); }
+
+.badge {
+  font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .03em;
+  padding: 4px 10px; border-radius: 999px; white-space: nowrap;
+}
+.badge.waiting { background: #2a2f42; color: #9aa4c2; }
+.badge.downloading { background: rgba(91,140,255,.15); color: var(--accent); animation: pulse 1.6s infinite; }
+.badge.uploading { background: rgba(143,107,255,.15); color: var(--accent-2); animation: pulse 1.6s infinite; }
+.badge.completed { background: rgba(53,212,136,.15); color: var(--green); }
+.badge.failed { background: rgba(255,92,114,.15); color: var(--red); }
+.badge.cancelled { background: #2a2f42; color: var(--text-dim); }
+.badge.paused { background: rgba(255,184,77,.15); color: var(--yellow); }
+@keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .55; } }
+
+.progress-bar { width: 100%; height: 8px; background: var(--surface-2); border-radius: 6px; overflow: hidden; }
+.progress-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent-2)); border-radius: 6px; transition: width .4s ease; }
+
+.stats-row { display: flex; gap: 16px; flex-wrap: wrap; font-size: 12px; color: var(--text-dim); }
+
+.error-text { font-size: 12px; color: var(--red); }
+
+.card-actions { display: flex; gap: 8px; }
+.card-actions button {
+  cursor: pointer; font-size: 12px; padding: 6px 12px; border-radius: 8px;
+  background: var(--surface-2); border: 1px solid var(--border); color: var(--text-dim);
+}
+.card-actions button:hover { color: var(--text); border-color: var(--accent); }
+
+.empty-state { text-align: center; color: var(--text-dim); padding: 40px 0; font-size: 13px; }
+
+/* --- Bulk add + cancel all (added) --- */
+#bulk-form textarea {
+  width: 100%;
+  font-family: inherit;
+  padding: 8px;
+  margin-bottom: 8px;
+  box-sizing: border-box;
+  resize: vertical;
+}
+.cancel-all {
+  margin-left: auto;
+  background: #b3261e;
+  color: #fff;
+  border: none;
+  padding: 6px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.cancel-all:hover { background: #8f1e18; }
+.tabs { display: flex; align-items: center; }
+
+/* --- Download mode: manual vs auto-from-JSON (added) --- */
+.mode-toggle { display: flex; gap: 8px; margin-bottom: 14px; }
+.mode-btn {
+  cursor: pointer; padding: 8px 18px; border-radius: 999px; font-size: 13px;
+  background: transparent; border: 1px solid var(--border); color: var(--text-dim);
+}
+.mode-btn.active { background: var(--surface-2); color: var(--text); border-color: var(--accent); }
+
+.hidden { display: none !important; }
+
+.auto-panel code {
+  background: var(--surface-2); padding: 1px 6px; border-radius: 4px; font-size: 11px;
+}
+
+#remote-queue-form { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 4px; }
+#remote-queue-form input[type="url"] { flex: 2 1 260px; }
+#remote-queue-form input[type="number"] { flex: 0 0 90px; }
+#remote-queue-form button { cursor: pointer; }
+#remote-queue-start-btn {
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  border: none; color: white; font-weight: 600;
+}
+#remote-queue-stop-btn { background: var(--surface-2); color: var(--red); border: 1px solid var(--border); }
+#remote-queue-sync-btn { background: var(--surface-2); color: var(--text-dim); border: 1px solid var(--border); }
+
+#remote-queue-status.status-on { color: var(--green); }
+#remote-queue-status.status-off { color: var(--text-dim); }
+#remote-queue-status.status-error { color: var(--red); }
+
+/* --- Multi-row URL add (redesigned) --- */
+.submit-card-head { display: flex; flex-direction: column; gap: 4px; margin-bottom: 16px; }
+.submit-card-head h2 { margin: 0; }
+.submit-card-head .hint { margin: 0; }
+
+#url-rows { display: flex; flex-direction: column; gap: 10px; }
+
+.url-row {
+  display: flex; gap: 8px; align-items: center;
+  background: var(--surface-2); border: 1px solid var(--border);
+  border-radius: 10px; padding: 6px; padding-left: 4px;
+  animation: rowIn .22s ease;
+}
+.url-row:focus-within { border-color: var(--accent); }
+@keyframes rowIn { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
+.url-row.row-removing { animation: rowOut .18s ease forwards; }
+@keyframes rowOut { to { opacity: 0; transform: translateX(8px) scale(.98); max-height: 0; margin: 0; padding: 0; } }
+
+.url-row input, .url-row select {
+  background: var(--surface); border: 1px solid transparent;
+}
+.url-row input:focus, .url-row select:focus { border-color: var(--accent); }
+.row-url { flex: 3 1 260px; min-width: 0; }
+.row-destination { flex: 0 0 140px; }
+.row-filename { flex: 1 1 140px; min-width: 0; }
+
+.remove-row-btn {
+  flex: 0 0 auto; width: 32px; height: 32px; padding: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: transparent; border: 1px solid var(--border); color: var(--text-dim);
+  border-radius: 8px; cursor: pointer; font-size: 16px; line-height: 1;
+}
+.remove-row-btn:hover { color: var(--red); border-color: var(--red); }
+.remove-row-btn:disabled { opacity: .3; cursor: not-allowed; }
+.remove-row-btn:disabled:hover { color: var(--text-dim); border-color: var(--border); }
+
+.row-actions { margin-top: 12px; }
+.add-row-btn {
+  cursor: pointer; width: 100%;
+  background: transparent; border: 1px dashed var(--border); color: var(--accent);
+  padding: 10px; border-radius: 10px; font-size: 13px; font-weight: 600;
+  transition: background .15s ease, border-color .15s ease;
+}
+.add-row-btn:hover { background: rgba(91,140,255,.08); border-color: var(--accent); }
+
+.submit-row { display: flex; align-items: center; gap: 14px; margin-top: 16px; flex-wrap: wrap; }
+.submit-row .hint { margin: 0; }
+#queue-all-btn {
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  border: none; color: white; font-weight: 600; cursor: pointer; padding: 11px 22px;
+  transition: transform .15s ease, filter .15s ease;
+}
+#queue-all-btn:hover { filter: brightness(1.08); transform: translateY(-1px); }
+#queue-all-btn:disabled { opacity: .6; cursor: not-allowed; transform: none; filter: none; }
+
+#url-row-template { display: none; }
+
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div class="brand">
+        <span class="brand-dot"></span>
+        <h1>Smart Upload Engine</h1>
+      </div>
+      <div class="disk-widget" id="disk-widget">
+        <div class="disk-bar"><div class="disk-bar-fill" id="disk-bar-fill"></div></div>
+        <span id="disk-text">Loading disk usage…</span>
+      </div>
+    </header>
+
+    <main>
+      <section class="submit-card">
+        <div class="submit-card-head">
+          <h2>Add downloads</h2>
+          <span class="hint">The engine automatically chooses direct streaming or disk fallback — no need to pick a mode.</span>
+        </div>
+
+        <form id="submit-form">
+          <div id="url-rows"></div>
+
+          <div class="row-actions">
+            <button type="button" id="add-row-btn" class="add-row-btn">+ Add URL</button>
+          </div>
+
+          <div class="submit-row">
+            <button type="submit" id="queue-all-btn">Send to VPS — Start Downloading</button>
+            <span class="hint" id="submit-result"></span>
+          </div>
+        </form>
+        <p class="hint">Each URL above starts processing on the VPS immediately, one at a time: download → upload → delete. Nothing sits waiting for another button.</p>
+      </section>
+
+      <template id="url-row-template">
+        <div class="url-row">
+          <input type="url" class="row-url" placeholder="https://example.com/file.zip" required />
+          <select class="row-destination">
+            <option value="google_drive">Google Drive</option>
+            <option value="gofile">GoFile</option>
+          </select>
+          <input type="text" class="row-filename" placeholder="Filename (optional)" />
+          <button type="button" class="remove-row-btn" title="Remove this URL">×</button>
+        </div>
+      </template>
+
+      <section class="submit-card">
+        <h2>Download mode</h2>
+        <div class="mode-toggle">
+          <button type="button" class="mode-btn active" data-mode="manual" id="mode-manual-btn">Manual</button>
+          <button type="button" class="mode-btn" data-mode="auto" id="mode-auto-btn">Auto from JSON</button>
+        </div>
+
+        <div id="mode-manual-hint" class="hint">
+          Manual mode: nothing downloads on its own. Add URLs above and hit Send to VPS.
+        </div>
+
+        <div id="mode-auto-panel" class="auto-panel hidden">
+          <!-- If REMOTE_QUEUE_URL is set in .env, this is just a toggle:
+               no need to re-type a URL that's already configured. -->
+          <div id="auto-configured-view" class="hidden">
+            <p class="hint">
+              Auto mode is configured to poll <code id="auto-configured-url"></code>
+              every <span id="auto-configured-interval"></span>s and queue anything new it finds.
+            </p>
+          </div>
+
+          <div id="auto-unconfigured-view" class="hidden">
+            <p class="hint">
+              No REMOTE_QUEUE_URL is set in .env yet, so enter one here to use auto mode
+              (shape: <code>{"gdrive": [...], "gofile": [...]}</code>).
+            </p>
+            <div class="submit-row">
+              <input type="url" id="remote-queue-url" placeholder="https://yoursite.example/down.json" />
+              <input type="number" id="remote-queue-interval" min="10" value="60" title="Poll interval (seconds)" />
+            </div>
+          </div>
+
+          <div class="submit-row">
+            <button type="button" id="remote-queue-start-btn">Start</button>
+            <button type="button" id="remote-queue-stop-btn">Stop</button>
+            <button type="button" id="remote-queue-sync-btn">Sync now</button>
+          </div>
+
+          <p class="hint">Restarting the server always turns auto mode back off until you press Start again — it never resumes on its own.</p>
+          <p class="hint" id="remote-queue-status">Status: off</p>
+        </div>
+      </section>
+
+      <nav class="tabs">
+        <button class="tab active" data-tab="queue">Queue</button>
+        <button class="tab" data-tab="completed">Completed</button>
+        <button class="tab" data-tab="failed">Failed</button>
+        <button id="cancel-all-btn" class="cancel-all">Cancel All</button>
+      </nav>
+
+      <section id="panel-queue" class="panel active"></section>
+      <section id="panel-completed" class="panel"></section>
+      <section id="panel-failed" class="panel"></section>
+    </main>
+  </div>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>

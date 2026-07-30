@@ -1,0 +1,9 @@
+{
+  "name": "smart-upload-engine-frontend",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Static dashboard for the Smart Upload Engine. No build step is required to run the app: index.html, app.js, and style.css are served directly by the FastAPI backend as static files. This package.json exists so the frontend can be optionally extended with tooling (linters, bundlers) later.",
+  "scripts": {
+    "lint": "echo 'No build step required. Edit static/app.js and static/style.css directly.'"
+  }
+}
