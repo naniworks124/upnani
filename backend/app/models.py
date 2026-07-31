@@ -22,6 +22,7 @@ class TaskStatus(str, Enum):
 class Destination(str, Enum):
     GOOGLE_DRIVE = "google_drive"
     GOFILE = "gofile"
+    BUZZHEAVIER = "buzzheavier"
 
 
 class TaskCreateRequest(BaseModel):
