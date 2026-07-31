@@ -35,7 +35,7 @@ from .queue_manager import (
     next_waiting_task, update_task, reset_stuck_tasks_on_boot, get_task, list_tasks,
 )
 from .security import safe_join
-from .upload import google_drive, gofile
+from .upload import google_drive, gofile, buzzheavier
 
 log = logging.getLogger("worker")
 settings = get_settings()
@@ -129,7 +129,11 @@ async def _run_download_phase(task: Task) -> Task:
 
 async def _upload_disk_mode(task: Task) -> dict:
     await update_task(task.id, status=TaskStatus.UPLOADING.value)
-    dest_name = "Google Drive" if task.destination == Destination.GOOGLE_DRIVE else "GoFile"
+    dest_name = {
+        Destination.GOOGLE_DRIVE: "Google Drive",
+        Destination.GOFILE: "GoFile",
+        Destination.BUZZHEAVIER: "BuzzHeavier",
+    }[task.destination]
     print(f"⬆️  Uploading to {dest_name}: {task.filename}")
 
     throttle = _Throttle()
@@ -164,11 +168,17 @@ async def _upload_disk_mode(task: Task) -> dict:
                     )
                     print(f"✅ Uploaded to Google Drive: {result['link']}")
                     return {"remote_file_id": result["file_id"], "remote_link": result["link"]}
-                else:  # GoFile
+                elif task.destination == Destination.GOFILE:
                     result = await gofile.upload_file_from_disk(
                         task.temp_path, task.filename, task.total_bytes, on_progress
                     )
                     print(f"✅ Uploaded to GoFile: {result['link']}")
+                    return {"remote_file_id": result["file_id"], "remote_link": result["link"]}
+                else:  # BuzzHeavier
+                    result = await buzzheavier.upload_file_from_disk(
+                        task.temp_path, task.filename, task.total_bytes, on_progress
+                    )
+                    print(f"✅ Uploaded to BuzzHeavier: {result['link']}")
                     return {"remote_file_id": result["file_id"], "remote_link": result["link"]}
             except Exception as e:
                 last_error = e
@@ -248,6 +258,8 @@ async def _try_streaming(task: Task) -> dict | None:
         if task.destination == Destination.GOOGLE_DRIVE:
             session_uri = await google_drive.create_resumable_session(filename, total_size)
             result = await google_drive.stream_upload_from_iterator(session_uri, counted_iter(), total_size, up_progress)
+        elif task.destination == Destination.BUZZHEAVIER:
+            result = await buzzheavier.stream_upload_from_iterator(counted_iter(), filename, total_size, up_progress)
         else:
             result = await gofile.stream_upload_from_iterator(counted_iter(), filename, total_size, up_progress)
 
