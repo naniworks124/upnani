@@ -18,6 +18,10 @@ class Settings:
     # ---- GoFile (only needed if you use GoFile uploads) ----
     GOFILE_API_TOKEN: str = os.getenv("GOFILE_API_TOKEN", "")
 
+    # ---- BuzzHeavier ----
+    BUZZHEAVIER_ACCOUNT_ID: str = os.getenv("BUZZHEAVIER_ACCOUNT_ID", "")
+    BUZZHEAVIER_FOLDER_ID: str = os.getenv("BUZZHEAVIER_FOLDER_ID", "")
+
     # ---- Remote queue ("Auto from JSON" mode) ----
     # NOTE: these two values are ONLY used to pre-fill the URL/interval
     # fields in the dashboard's "Auto from JSON" panel. Setting them here
