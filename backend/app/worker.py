@@ -212,7 +212,12 @@ async def _try_streaming(task: Task) -> dict | None:
     # 'read'" after already downloading part of the file. Skip straight
     # to disk mode for GoFile instead of wasting a doomed attempt (and a
     # second full download) every single time.
-    if task.destination == Destination.GOFILE:
+    #
+    # BuzzHeavier's raw-PUT API could theoretically support a chunked
+    # streaming body, but that hasn't been verified against their actual
+    # server behavior -- skip straight to disk mode here too rather than
+    # ship an unconfirmed assumption.
+    if task.destination in (Destination.GOFILE, Destination.BUZZHEAVIER):
         return None
 
     try:
