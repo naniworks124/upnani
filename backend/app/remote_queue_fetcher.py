@@ -78,6 +78,7 @@ async def _sync_once() -> dict:
         "gdrive": Destination.GOOGLE_DRIVE,
         "google_drive": Destination.GOOGLE_DRIVE,
         "gofile": Destination.GOFILE,
+        "buzzheavier": Destination.BUZZHEAVIER,
     }
 
     for key, destination in mapping.items():
